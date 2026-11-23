@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CubeTech Event Registration System
 
-## Getting Started
+A web application for event registration with QR code ticketing and staff check-in functionality. Built for the CubeTech Innovations Software Development Internship Assessment.
 
-First, run the development server:
+## 🏆 Level Reached
+**Level 1 (Core) - Fully Completed**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠️ Tech Stack
+*   **Frontend:** Next.js 16 (App Router, React Server Components, Tailwind CSS v4)
+*   **Backend:** Next.js Server Actions (Node.js)
+*   **Database:** PostgreSQL (Hosted on Neon)
+*   **ORM:** Prisma 8 (Release Candidate)
+*   **Authentication:** `jose` (JWT stored in HTTP-Only cookies)
+*   **QR Code Generation:** `qrcode`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Setup and Run Instructions
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Clone the repository:**
+    git clone https://github.com/dhenzrou19/cubetech-event-app.git
+    cd cubetech-event-app
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Install dependencies:**
+    npm install
 
-## Learn More
+3. **Environment Variables:**
+   Copy the `.env.example` file to `.env` and fill in your PostgreSQL connection string and a secure JWT secret.
+    cp .env.example .env
 
-To learn more about Next.js, take a look at the following resources:
+4. **Database Setup (Prisma 8):**
+   Generate the contract and push the schema to your database.
+    npx prisma contract emit
+    npx prisma db update
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. **Seed the Database:**
+   Populate the database with the demo events and staff account.
+    npx tsx prisma/seed.ts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+6. **Run the development server:**
+    npm run dev
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Deploy on Vercel
+## 🔐 Demo Staff Login
+Use these credentials to access the staff dashboard (`/staff/login`):
+*   **Username:** `staff1`
+*   **Password:** `password123`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📊 Data Model
+*   **StaffUser:** Stores organizer/staff credentials (hashed passwords).
+*   **Event:** Stores event details (title, venue, capacity, start/end times).
+*   **Registration:** Links an attendee to an event, stores their unique ticket code, and tracks check-in status.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ✅ Completed Features (Level 1 Acceptance Checklist)
+- [x] **Event List & Details:** Shows upcoming events. Past events are marked "Ended".
+- [x] **Registration Form:** Collects name, email, and 11-digit PH mobile. Client and server-side validation.
+- [x] **Capacity Check:** Server checks capacity before saving to prevent overbooking.
+- [x] **Duplicate Prevention:** One email can only register once per event.
+- [x] **Ticket Page:** Generates a unique ticket code and a scannable QR code.
+- [x] **Ticket Lookup:** Attendees can find their ticket using their Ticket Code + Email.
+- [x] **Staff Sign-in:** Secure JWT-based authentication protecting staff routes.
+- [x] **Check-in Screen:** Staff can enter a ticket code to check someone in (Green: Success, Yellow: Already checked in, Red: Invalid).
+- [x] **Attendee List:** Staff can view a table of attendees with search functionality and live totals.
+
+## ⚠️ Known Limitations
+*   Prisma 8 is currently in Release Candidate (RC). Due to changes in the query engine, some operations (like `.count()`) were bypassed in favor of fetching and filtering in memory to ensure stability.
+*   Level 1 does not include camera scanning (manual code entry only).
