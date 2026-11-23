@@ -5,15 +5,17 @@ import RegisterForm from './register-form';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EventDetailsPage({ params }: { params: { id: string } }) {
-  // 1. Fetch the event
-  const event = await db.orm.public.Event.where({ id: params.id }).first();
+// ✅ FIX: params is a Promise in Next.js 16
+export default async function EventDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const eventId = resolvedParams.id;
+
+  const event = await db.orm.public.Event.where({ id: eventId }).first();
 
   if (!event) {
     notFound();
   }
 
-  // 2. Count confirmed registrations (Prisma 8 workaround: fetch and get length)
   const registrations = await db.orm.public.Registration.where({ 
     eventId: event.id,
     status: 'CONFIRMED'
@@ -23,23 +25,15 @@ export default async function EventDetailsPage({ params }: { params: { id: strin
   const spotsLeft = event.capacity - registeredCount;
   const isFull = spotsLeft <= 0;
 
-  // Format time to 12-hour AM/PM (Cebu time)
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'Asia/Manila'
+      hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila'
     });
   };
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      timeZone: 'Asia/Manila'
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila'
     });
   };
 
