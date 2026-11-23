@@ -1,1 +1,0 @@
-# cubetech-event-app
