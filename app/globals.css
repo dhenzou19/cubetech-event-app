@@ -59,3 +59,26 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+
+.ticket-perforation {
+  border-top: 1px dashed #bfdbfe;
+}
+
+.ticket-perforation::before,
+.ticket-perforation::after {
+  position: absolute;
+  top: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f8fafc; /* Matches your modal background */
+  content: '';
+}
+
+.ticket-perforation::before {
+  left: -39px;
+}
+
+.ticket-perforation::after {
+  right: -39px;
+}

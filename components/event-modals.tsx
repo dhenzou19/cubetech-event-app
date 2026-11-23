@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
 import { CalendarDays, Mail, MapPin, Search, X, Loader2 } from 'lucide-react'
 import { registerAttendee } from '@/app/actions/register'
 import { findTicket } from '@/app/actions/lookup'
+import { fetchTicketData } from '@/app/actions/ticket'
 
 type EventInfo = {
   id: string
@@ -21,9 +21,9 @@ type EventModalProps = {
 
 export function EventModal({ mode, event, onClose }: EventModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [ticketData, setTicketData] = useState<any>(null)
   const isRegistration = mode === 'registration'
 
   useEffect(() => {
@@ -41,31 +41,34 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
     setError('')
     
     const formData = new FormData(e.currentTarget)
+    let result;
 
     if (isRegistration && event) {
-      const result = await registerAttendee({
+      result = await registerAttendee({
         eventId: event.id,
         fullName: formData.get('fullName') as string,
         email: formData.get('email') as string,
         mobile: formData.get('mobile') as string,
       })
-      if (result.error) {
-        setError(result.error)
-        setLoading(false)
-      } else {
-        router.push(`/tickets/${result.ticketCode}`)
-      }
     } else {
-      const result = await findTicket(
+      result = await findTicket(
         formData.get('ticketCode') as string,
         formData.get('email') as string
       )
-      if (result.error) {
-        setError(result.error)
-        setLoading(false)
+    }
+
+    if (result.error) {
+      setError(result.error)
+      setLoading(false)
+    } else if (result.ticketCode) {
+      // Fetch the full data for the beautiful ticket modal
+      const ticketRes = await fetchTicketData(result.ticketCode)
+      if (ticketRes.success) {
+        setTicketData(ticketRes.ticket)
       } else {
-        router.push(`/tickets/${result.ticketCode}`)
+        setError(ticketRes.error || 'Failed to load ticket')
       }
+      setLoading(false)
     }
   }
 
@@ -77,17 +80,52 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
       onCancel={(e) => { e.preventDefault(); onClose(); }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <section className="relative max-h-[min(90dvh,760px)] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-9">
+      <section className={`relative max-h-[min(90dvh,760px)] overflow-y-auto rounded-3xl bg-white shadow-2xl ${ticketData ? 'p-0' : 'p-6 sm:p-9'}`}>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close dialog"
-          className="absolute right-5 top-5 flex size-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+          className={`absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 ${ticketData ? 'bg-white/15 text-white hover:bg-white/25 focus-visible:ring-white' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-blue-600'}`}
         >
           <X className="size-[18px]" />
         </button>
 
-        {isRegistration ? (
+        {ticketData ? (
+          /* --- REAL TICKET MODAL VIEW --- */
+          <div className="relative overflow-hidden rounded-3xl bg-white">
+            <header className="bg-blue-600 px-7 pb-6 pt-7 text-white sm:px-9 sm:pt-8">
+              <p className="text-[10px] font-semibold tracking-[0.17em] text-blue-100">GATHER • CEBU</p>
+              <h2 id="event-modal-title" className="mt-2 text-[30px] font-semibold tracking-[-0.06em]">Your Ticket</h2>
+              <p className="mt-1 text-sm text-blue-100">Show this QR code at the door</p>
+            </header>
+            <div className="px-7 pb-7 pt-6 sm:px-9 sm:pb-8">
+              <div>
+                <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">EVENT</p>
+                <h3 className="mt-1 text-[20px] font-semibold tracking-[-0.04em] text-slate-900">{ticketData.eventTitle}</h3>
+                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  <div><p className="text-[10px] font-semibold tracking-[0.12em] text-slate-400">DATE</p><p className="mt-1 font-medium text-slate-700">{ticketData.dateStr}</p></div>
+                  <div><p className="text-[10px] font-semibold tracking-[0.12em] text-slate-400">TIME</p><p className="mt-1 font-medium text-slate-700">{ticketData.timeStr}</p></div>
+                  <div className="col-span-2"><p className="text-[10px] font-semibold tracking-[0.12em] text-slate-400">VENUE</p><p className="mt-1 font-medium text-slate-700">{ticketData.venue}</p></div>
+                </div>
+              </div>
+              
+              <div className="ticket-perforation relative my-6" aria-hidden="true" />
+              
+              <div className="text-center">
+                <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">ATTENDEE</p>
+                <p className="mt-1 text-lg font-semibold tracking-[-0.03em] text-slate-900">{ticketData.fullName}</p>
+                
+                <div className="mx-auto my-5 flex size-[152px] items-center justify-center rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+                  <img src={ticketData.qrCodeDataUrl} alt="Ticket QR" className="size-full" />
+                </div>
+                
+                <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">TICKET CODE</p>
+                <p className="mx-auto mt-2 inline-flex rounded-full bg-blue-50 px-4 py-2 font-mono text-sm font-bold tracking-[0.08em] text-blue-700">{ticketData.ticketCode}</p>
+              </div>
+            </div>
+          </div>
+        ) : isRegistration ? (
+          /* --- REGISTRATION FORM VIEW --- */
           <>
             <div className="mb-7 pr-8">
               <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><CalendarDays className="size-5" /></span>
@@ -117,6 +155,7 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
             </form>
           </>
         ) : (
+          /* --- TICKET LOOKUP VIEW --- */
           <>
             <div className="mb-7 pr-8">
               <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Search className="size-5" /></span>
