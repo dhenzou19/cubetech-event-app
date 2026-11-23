@@ -1,0 +1,43 @@
+// use prisma-8
+
+// 1. The Staff/Organizer Account
+model StaffUser {
+  id           String   @id @onCreate(uuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("STAFF") // e.g., "STAFF" or "ORGANIZER"
+  createdAt    DateTime @onCreate(now())
+}
+
+// 2. The Event Details
+model Event {
+  id             String         @id @onCreate(uuid())
+  title          String
+  description    String
+  venue          String
+  startsAt       DateTime
+  endsAt         DateTime
+  capacity       Int
+  status         String         @default("PUBLISHED") // e.g., "DRAFT", "PUBLISHED", "CANCELLED"
+  createdAt      DateTime       @onCreate(now())
+  
+  // Relationship: One Event has many Registrations
+  registrations  Registration[]
+}
+
+// 3. The Attendee Ticket
+model Registration {
+  id           String   @id @onCreate(uuid())
+  fullName     String
+  email        String
+  mobile       String
+  ticketCode   String   @unique // The unique string we turn into a QR code
+  status       String   @default("CONFIRMED") // "CONFIRMED", "WAITLISTED", "CHECKED_IN"
+  createdAt    DateTime @onCreate(now())
+  checkedInAt  DateTime? // Nullable (empty until they actually check in)
+
+  // Relationship: Tie this registration to a specific Event
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
