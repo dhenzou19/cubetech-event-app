@@ -1,4 +1,4 @@
-import { db } from './lib/db';
+import { db } from '@/app/lib/db';
 import HomeClient from '@/components/HomeClient';
 
 export const dynamic = 'force-dynamic';
@@ -7,11 +7,12 @@ export default async function Page() {
   const dbEvents = await db.orm.public.Event.where({ status: 'PUBLISHED' }).all();
   const registrations = await db.orm.public.Registration.where({ status: 'CONFIRMED' }).all();
 
-  const events = dbEvents.map(event => {
+  // ✅ FIX: Added ': any' to event and r
+  const events = dbEvents.map((event: any) => {
     const startDate = new Date(event.startsAt);
     const endDate = new Date(event.endsAt);
     const isPast = endDate < new Date();
-    const registeredCount = registrations.filter(r => r.eventId === event.id).length;
+    const registeredCount = registrations.filter((r: any) => r.eventId === event.id).length;
     const spotsLeft = event.capacity - registeredCount;
     const isFull = spotsLeft <= 0;
 
