@@ -39,11 +39,6 @@ A web application for event registration with QR code ticketing and staff check-
     npm run dev
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 🔐 Demo Staff Login
-Use these credentials to access the staff dashboard (`/staff/login`):
-*   **Username:** `staff1`
-*   **Password:** `password123`
-
 ## 📊 Data Model
 *   **StaffUser:** Stores organizer/staff credentials (hashed passwords).
 *   **Event:** Stores event details (title, venue, capacity, start/end times).
