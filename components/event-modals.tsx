@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { CalendarDays, Mail, MapPin, Search, X, Loader2, AlertCircle } from 'lucide-react'
+import { CalendarDays, Mail, MapPin, Search, X, Loader2 } from 'lucide-react'
 import { registerAttendee } from '@/app/actions/register'
 import { findTicket } from '@/app/actions/lookup'
 import { fetchTicketData } from '@/app/actions/ticket'
@@ -81,7 +81,6 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
       setError(result.error)
       setLoading(false)
     } else {
-      // Update local state to reflect cancellation
       setTicketData({ ...ticketData, status: 'CANCELLED' })
       setIsConfirmingCancel(false)
       setLoading(false)
@@ -96,7 +95,7 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
       onCancel={(e) => { e.preventDefault(); onClose(); }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <section className={`relative max-h-[min(90dvh,760px)] overflow-y-auto rounded-3xl bg-white shadow-2xl ${ticketData ? 'p-0' : 'p-6 sm:p-9'}`}>
+      <section className={`relative overflow-y-auto rounded-3xl bg-white shadow-2xl ${ticketData ? 'max-h-[calc(100dvh-32px)] p-0' : 'max-h-[min(90dvh,760px)] p-6 sm:p-9'}`}>
         <button
           type="button"
           onClick={onClose}
@@ -107,7 +106,7 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
         </button>
 
         {ticketData ? (
-          <div className="relative overflow-hidden rounded-3xl bg-white">
+          <div className="relative overflow-hidden bg-white">
             <header className="bg-blue-600 px-7 pb-6 pt-7 text-white sm:px-9 sm:pt-8">
               <p className="text-[10px] font-semibold tracking-[0.17em] text-blue-100">GATHER • CEBU</p>
               <h2 id="event-modal-title" className="mt-2 text-[30px] font-semibold tracking-[-0.06em]">
@@ -143,34 +142,30 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
                   {ticketData.ticketCode}
                 </p>
               </div>
-
-                       {/* Cancel Section */}
-              {ticketData.status === 'CONFIRMED' && (
-                <div className="mt-6 border-t border-slate-100 pt-4">
-                  {error && <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium border border-red-100">{error}</div>}
-                  
-                  {isConfirmingCancel ? (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-                      <p className="text-sm font-medium text-red-800 mb-3 flex items-center justify-center gap-2"><AlertCircle className="size-4" /> Are you sure you want to cancel?</p>
-                      <div className="flex gap-3">
-                        <button onClick={() => setIsConfirmingCancel(false)} className="flex-1 py-2 rounded-lg bg-white border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">No, keep it</button>
-                        <button onClick={handleCancel} disabled={loading} className="flex-1 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition flex justify-center items-center">
-                          {loading ? <Loader2 className="size-4 animate-spin" /> : 'Yes, cancel'}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button onClick={() => setIsConfirmingCancel(true)} className="w-full py-2 text-sm font-medium text-slate-400 hover:text-red-600 transition">
-                      Cancel Registration
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
+            
+            {/* v0's new footer */}
+            {ticketData.status === 'CONFIRMED' && (
+              <footer className="border-t border-slate-100 bg-slate-50 px-7 py-4 text-center sm:px-9">
+                {error && <div className="mb-3 text-sm text-red-600 font-medium">{error}</div>}
+                
+                {isConfirmingCancel ? (
+                  <div className="flex gap-3">
+                    <button onClick={() => setIsConfirmingCancel(false)} className="flex-1 py-2 rounded-lg bg-white border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">No, keep it</button>
+                    <button onClick={handleCancel} disabled={loading} className="flex-1 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition flex justify-center items-center">
+                      {loading ? <Loader2 className="size-4 animate-spin" /> : 'Yes, cancel'}
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setIsConfirmingCancel(true)} className="rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition hover:text-red-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
+                    Cancel Registration
+                  </button>
+                )}
+              </footer>
+            )}
           </div>
         ) : isRegistration ? (
           <>
-            {/* ... Registration Form (Keep existing) ... */}
             <div className="mb-7 pr-8">
               <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><CalendarDays className="size-5" /></span>
               <p className="mb-2 text-[10px] font-semibold tracking-[0.16em] text-blue-700">SAVE YOUR SEAT</p>
@@ -200,7 +195,6 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
           </>
         ) : (
           <>
-            {/* ... Lookup Form (Keep existing) ... */}
             <div className="mb-7 pr-8">
               <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Search className="size-5" /></span>
               <p className="mb-2 text-[10px] font-semibold tracking-[0.16em] text-blue-700">YOUR NEXT CONNECTION</p>

@@ -16,6 +16,50 @@ body {
   background: radial-gradient(ellipse at 50% 10%, rgba(219, 234, 254, 0.68), rgba(248, 250, 252, 0) 68%);
 }
 
+.event-dialog[open] {
+  position: fixed;
+  inset: 0;
+  max-height: 100dvh;
+}
+
+.event-dialog::backdrop {
+  background: rgb(15 23 42 / 40%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ticket-perforation {
+  margin-right: -1.75rem;
+  margin-left: -1.75rem;
+  border-top: 1px dashed #bfdbfe;
+}
+
+.ticket-perforation::before,
+.ticket-perforation::after {
+  position: absolute;
+  top: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgb(15 23 42 / 40%);
+  content: '';
+}
+
+.ticket-perforation::before {
+  left: -12px;
+}
+
+.ticket-perforation::after {
+  right: -12px;
+}
+
+@media (min-width: 640px) {
+  .ticket-perforation {
+    margin-right: -2.25rem;
+    margin-left: -2.25rem;
+  }
+}
+
 .event-art {
   background-color: #101c39;
   isolation: isolate;
@@ -46,39 +90,4 @@ body {
   opacity: 0.19;
   background-image: linear-gradient(125deg, transparent 47%, rgba(255,255,255,.45) 47.2%, transparent 47.5%), linear-gradient(145deg, transparent 59%, rgba(255,255,255,.35) 59.2%, transparent 59.5%);
   mask-image: linear-gradient(to bottom, black, transparent 78%);
-}
-
-.event-dialog[open] {
-  position: fixed;
-  inset: 0;
-  max-height: 100dvh;
-}
-
-.event-dialog::backdrop {
-  background: rgb(15 23 42 / 40%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.ticket-perforation {
-  border-top: 1px dashed #bfdbfe;
-}
-
-.ticket-perforation::before,
-.ticket-perforation::after {
-  position: absolute;
-  top: -12px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #f8fafc; /* Matches your modal background */
-  content: '';
-}
-
-.ticket-perforation::before {
-  left: -39px;
-}
-
-.ticket-perforation::after {
-  right: -39px;
 }
