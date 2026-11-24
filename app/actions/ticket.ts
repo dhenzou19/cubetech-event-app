@@ -22,6 +22,8 @@ export async function fetchTicketData(ticketCode: string) {
   return {
     success: true,
     ticket: {
+      id: registration.id,
+      status: registration.status,
       fullName: registration.fullName,
       ticketCode: registration.ticketCode,
       eventTitle: event.title,

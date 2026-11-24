@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { CalendarDays, Mail, MapPin, Search, X, Loader2 } from 'lucide-react'
+import { CalendarDays, Mail, MapPin, Search, X, Loader2, AlertCircle } from 'lucide-react'
 import { registerAttendee } from '@/app/actions/register'
 import { findTicket } from '@/app/actions/lookup'
 import { fetchTicketData } from '@/app/actions/ticket'
+import { cancelRegistration } from '@/app/actions/cancel'
 
 type EventInfo = {
   id: string
@@ -24,6 +25,7 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [ticketData, setTicketData] = useState<any>(null)
+  const [isConfirmingCancel, setIsConfirmingCancel] = useState(false)
   const isRegistration = mode === 'registration'
 
   useEffect(() => {
@@ -61,13 +63,27 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
       setError(result.error)
       setLoading(false)
     } else if (result.ticketCode) {
-      // Fetch the full data for the beautiful ticket modal
       const ticketRes = await fetchTicketData(result.ticketCode)
       if (ticketRes.success) {
         setTicketData(ticketRes.ticket)
       } else {
         setError(ticketRes.error || 'Failed to load ticket')
       }
+      setLoading(false)
+    }
+  }
+
+  async function handleCancel() {
+    setLoading(true)
+    setError('')
+    const result = await cancelRegistration(ticketData.id)
+    if (result.error) {
+      setError(result.error)
+      setLoading(false)
+    } else {
+      // Update local state to reflect cancellation
+      setTicketData({ ...ticketData, status: 'CANCELLED' })
+      setIsConfirmingCancel(false)
       setLoading(false)
     }
   }
@@ -91,12 +107,15 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
         </button>
 
         {ticketData ? (
-          /* --- REAL TICKET MODAL VIEW --- */
           <div className="relative overflow-hidden rounded-3xl bg-white">
             <header className="bg-blue-600 px-7 pb-6 pt-7 text-white sm:px-9 sm:pt-8">
               <p className="text-[10px] font-semibold tracking-[0.17em] text-blue-100">GATHER • CEBU</p>
-              <h2 id="event-modal-title" className="mt-2 text-[30px] font-semibold tracking-[-0.06em]">Your Ticket</h2>
-              <p className="mt-1 text-sm text-blue-100">Show this QR code at the door</p>
+              <h2 id="event-modal-title" className="mt-2 text-[30px] font-semibold tracking-[-0.06em]">
+                {ticketData.status === 'CANCELLED' ? 'Ticket Cancelled' : 'Your Ticket'}
+              </h2>
+              <p className="mt-1 text-sm text-blue-100">
+                {ticketData.status === 'CANCELLED' ? 'This ticket is no longer valid' : 'Show this QR code at the door'}
+              </p>
             </header>
             <div className="px-7 pb-7 pt-6 sm:px-9 sm:pb-8">
               <div>
@@ -115,18 +134,43 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
                 <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">ATTENDEE</p>
                 <p className="mt-1 text-lg font-semibold tracking-[-0.03em] text-slate-900">{ticketData.fullName}</p>
                 
-                <div className="mx-auto my-5 flex size-[152px] items-center justify-center rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+                <div className={`mx-auto my-5 flex size-[152px] items-center justify-center rounded-2xl border border-slate-100 bg-white p-3 shadow-sm ${ticketData.status === 'CANCELLED' ? 'opacity-30 grayscale' : ''}`}>
                   <img src={ticketData.qrCodeDataUrl} alt="Ticket QR" className="size-full" />
                 </div>
                 
                 <p className="text-[10px] font-semibold tracking-[0.15em] text-slate-400">TICKET CODE</p>
-                <p className="mx-auto mt-2 inline-flex rounded-full bg-blue-50 px-4 py-2 font-mono text-sm font-bold tracking-[0.08em] text-blue-700">{ticketData.ticketCode}</p>
+                <p className={`mx-auto mt-2 inline-flex rounded-full px-4 py-2 font-mono text-sm font-bold tracking-[0.08em] ${ticketData.status === 'CANCELLED' ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
+                  {ticketData.ticketCode}
+                </p>
               </div>
+
+                       {/* Cancel Section */}
+              {ticketData.status === 'CONFIRMED' && (
+                <div className="mt-6 border-t border-slate-100 pt-4">
+                  {error && <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium border border-red-100">{error}</div>}
+                  
+                  {isConfirmingCancel ? (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+                      <p className="text-sm font-medium text-red-800 mb-3 flex items-center justify-center gap-2"><AlertCircle className="size-4" /> Are you sure you want to cancel?</p>
+                      <div className="flex gap-3">
+                        <button onClick={() => setIsConfirmingCancel(false)} className="flex-1 py-2 rounded-lg bg-white border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">No, keep it</button>
+                        <button onClick={handleCancel} disabled={loading} className="flex-1 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition flex justify-center items-center">
+                          {loading ? <Loader2 className="size-4 animate-spin" /> : 'Yes, cancel'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setIsConfirmingCancel(true)} className="w-full py-2 text-sm font-medium text-slate-400 hover:text-red-600 transition">
+                      Cancel Registration
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : isRegistration ? (
-          /* --- REGISTRATION FORM VIEW --- */
           <>
+            {/* ... Registration Form (Keep existing) ... */}
             <div className="mb-7 pr-8">
               <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><CalendarDays className="size-5" /></span>
               <p className="mb-2 text-[10px] font-semibold tracking-[0.16em] text-blue-700">SAVE YOUR SEAT</p>
@@ -144,10 +188,10 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
                 <input name="fullName" autoComplete="name" required placeholder="Your name" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
               </label>
               <label className="flex flex-col gap-2 text-xs font-semibold text-slate-700">Email
-                <input name="email" type="email" autoComplete="email" required placeholder="Your Email" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
+                <input name="email" type="email" autoComplete="email" required placeholder="you@example.com" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
               </label>
               <label className="flex flex-col gap-2 text-xs font-semibold text-slate-700">Mobile Number
-                <input name="mobile" type="tel" autoComplete="tel" required placeholder="Your Mobile Number" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
+                <input name="mobile" type="tel" autoComplete="tel" required placeholder="09171234567" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
               </label>
               <button type="submit" disabled={loading} className="mt-2 flex h-[54px] w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-[0_7px_16px_-8px_rgba(37,99,235,0.9)] transition hover:bg-blue-700 disabled:opacity-50">
                 {loading ? <Loader2 className="size-5 animate-spin" /> : 'Register Now'}
@@ -155,8 +199,8 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
             </form>
           </>
         ) : (
-          /* --- TICKET LOOKUP VIEW --- */
           <>
+            {/* ... Lookup Form (Keep existing) ... */}
             <div className="mb-7 pr-8">
               <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Search className="size-5" /></span>
               <p className="mb-2 text-[10px] font-semibold tracking-[0.16em] text-blue-700">YOUR NEXT CONNECTION</p>
@@ -171,7 +215,7 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
                 <input name="ticketCode" autoComplete="off" required placeholder="e.g. TKT-A1B2C3" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal uppercase text-slate-900 outline-none transition placeholder:normal-case placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
               </label>
               <label className="flex flex-col gap-2 text-xs font-semibold text-slate-700">Email Address
-                <span className="relative block"><Mail className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input name="email" type="email" autoComplete="email" required placeholder="Your Email" className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" /></span>
+                <span className="relative block"><Mail className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input name="email" type="email" autoComplete="email" required placeholder="you@example.com" className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" /></span>
               </label>
               <button type="submit" disabled={loading} className="mt-2 flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-[0_7px_16px_-8px_rgba(37,99,235,0.9)] transition hover:bg-blue-700 disabled:opacity-50">
                 {loading ? <Loader2 className="size-5 animate-spin" /> : <><Search className="size-4" />Find Ticket</>}
