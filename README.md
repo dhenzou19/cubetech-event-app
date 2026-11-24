@@ -75,3 +75,10 @@ Use these credentials to access the staff dashboard (`/staff/login`):
 Use these credentials to access the staff dashboard (`/staff/login`):
 *   **Username:** `demo`
 *   **Password:** `password123`
+
+## 🚀 Level 2 Progress (Completed)
+- [x] **Cancel a Registration:** Attendees can cancel their confirmed ticket.
+- [x] **Waitlist:** Full events allow attendees to join a waitlist. Staff can promote them.
+- [x] **Staff Dashboard & CSV:** Export attendee list and view stats.
+- [x] **Undo Check-in:** Staff can reverse a mistaken check-in.
+- [x] **Event Management:** Staff can create, edit, and close events with server-side validation.
