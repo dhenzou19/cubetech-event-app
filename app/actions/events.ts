@@ -5,8 +5,9 @@ import { verifyStaffSession } from '@/app/lib/auth';
 import { revalidatePath } from 'next/cache';
 
 export async function createEvent(data: any) {
+  // ✅ Security Check
   const session = await verifyStaffSession();
-  if (!session) return { error: 'Unauthorized' };
+  if (!session) return { error: 'Unauthorized. Please log in.' };
 
   if (new Date(data.endsAt) <= new Date(data.startsAt)) {
     return { error: 'End time must be after start time.' };
@@ -31,8 +32,9 @@ export async function createEvent(data: any) {
 }
 
 export async function updateEvent(eventId: string, data: any) {
+  // ✅ Security Check
   const session = await verifyStaffSession();
-  if (!session) return { error: 'Unauthorized' };
+  if (!session) return { error: 'Unauthorized. Please log in.' };
 
   if (new Date(data.endsAt) <= new Date(data.startsAt)) {
     return { error: 'End time must be after start time.' };

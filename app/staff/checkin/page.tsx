@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import StaffCheckInForm from './checkin-form';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0; 
 
 export default async function CheckInPage() {
   const session = await verifyStaffSession();

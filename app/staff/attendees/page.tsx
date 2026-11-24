@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import StaffAttendees from './attendee-list';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0; 
 
 export default async function AttendeesPage() {
   const session = await verifyStaffSession();
