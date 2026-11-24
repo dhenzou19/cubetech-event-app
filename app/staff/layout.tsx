@@ -6,6 +6,7 @@ import { Wifi, ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 const navigation = [
+    { href: '/staff/events', label: 'Events' }, 
   { href: '/staff/attendees', label: 'View Attendees' },
   { href: '/staff/checkin', label: 'Check-In' },
 ]
