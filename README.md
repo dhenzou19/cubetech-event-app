@@ -63,3 +63,10 @@ Use these credentials to access the staff dashboard (`/staff/login`):
 ## ⚠️ Known Limitations
 *   Prisma 8 is currently in Release Candidate (RC). Due to changes in the query engine, some operations (like `.count()`) were bypassed in favor of fetching and filtering in memory to ensure stability.
 *   Level 1 does not include camera scanning (manual code entry only).
+
+## 🚀 Level 2 Progress (In Progress)
+- [x] **Cancel a Registration:** Attendees can cancel their confirmed ticket from the Ticket Modal.
+- [x] **Waitlist:** Full events allow attendees to join a waitlist. Staff can promote them via the Attendee List.
+- [ ] **Staff Dashboard & CSV:** Overview of event stats and attendee list export.
+- [ ] **Event Management:** Staff can create, edit, and close events.
+- [ ] **Undo Check-in:** Staff can reverse a mistaken check-in.

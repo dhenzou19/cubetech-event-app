@@ -51,3 +51,17 @@ export async function processCheckIn(eventId: string, ticketCode: string) {
     name: registration.fullName 
   };
 }
+
+// ... existing processCheckIn function ...
+
+export async function undoCheckIn(registrationId: string) {
+  const session = await verifyStaffSession();
+  if (!session) return { error: 'Unauthorized' };
+
+  await db.orm.public.Registration.where({ id: registrationId }).update({
+    status: 'CONFIRMED',
+    checkedInAt: null
+  });
+
+  return { success: true };
+}

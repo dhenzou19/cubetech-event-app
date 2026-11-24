@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { promoteWaitlist } from '@/app/actions/waitlist';
-import { Loader2, ArrowUpCircle } from 'lucide-react';
+import { undoCheckIn } from '@/app/actions/checkin';
+import { Loader2, ArrowUpCircle, RotateCcw } from 'lucide-react';
 
 type EventType = { id: string; title: string; capacity: number };
 type RegistrationType = { 
@@ -29,16 +30,13 @@ export default function AttendeeList({
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState('');
 
-  // 1. Filter registrations by selected event
   const eventRegistrations = allRegistrations.filter(r => r.eventId === selectedEventId);
-  
-  // 2. Calculate Totals
   const selectedEvent = events.find(e => e.id === selectedEventId);
+  
   const totalRegistered = eventRegistrations.filter(r => r.status === 'CONFIRMED' || r.status === 'CHECKED_IN').length;
   const totalCheckedIn = eventRegistrations.filter(r => r.status === 'CHECKED_IN').length;
   const totalWaitlisted = eventRegistrations.filter(r => r.status === 'WAITLISTED').length;
 
-  // 3. Apply Search Filter
   const filteredAttendees = eventRegistrations.filter(r => 
     r.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
     r.ticketCode.toLowerCase().includes(searchTerm.toLowerCase())
@@ -53,16 +51,43 @@ export default function AttendeeList({
   const handlePromote = async (id: string) => {
     setLoadingId(id);
     setError('');
-    
     const result = await promoteWaitlist(id, selectedEventId);
-    
-    if (result.error) {
-      setError(result.error);
-    } else {
-      // Force a page refresh to get the new data from the server
-      window.location.reload();
-    }
+    if (result.error) setError(result.error);
+    else window.location.reload();
     setLoadingId(null);
+  };
+
+  const handleUndo = async (id: string) => {
+    if (!confirm("Are you sure you want to undo this check-in?")) return;
+    setLoadingId(id);
+    setError('');
+    const result = await undoCheckIn(id);
+    if (result.error) setError(result.error);
+    else window.location.reload();
+    setLoadingId(null);
+  };
+
+  // 🛠️ CSV Export Logic
+  const downloadCSV = () => {
+    const headers = ['Name', 'Email', 'Mobile', 'Ticket Code', 'Status', 'Checked In At'];
+    const rows = eventRegistrations.map(r => [
+      r.fullName,
+      r.email,
+      r.mobile,
+      r.ticketCode,
+      r.status,
+      r.checkedInAt ? formatDate(r.checkedInAt) : 'N/A'
+    ]);
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${selectedEvent?.title.replace(/\s+/g, '_')}_Attendees.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -98,6 +123,10 @@ export default function AttendeeList({
             className="w-full border border-gray-300 rounded-lg p-2.5 text-gray-900"
           />
         </div>
+
+        <button onClick={downloadCSV} className="w-full md:w-auto px-5 py-2.5 bg-gray-900 hover:bg-black text-white rounded-lg font-semibold transition">
+          Export to CSV
+        </button>
       </div>
 
       {/* Stats Bar */}
@@ -115,8 +144,8 @@ export default function AttendeeList({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket Code</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registered At</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -124,23 +153,12 @@ export default function AttendeeList({
               <tr key={reg.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {reg.fullName}
-                  {reg.status === 'WAITLISTED' && (
-                    <button 
-                      onClick={() => handlePromote(reg.id)}
-                      disabled={loadingId === reg.id}
-                      className="ml-3 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold bg-blue-50 px-2 py-1 rounded"
-                    >
-                      {loadingId === reg.id ? <Loader2 className="size-3 animate-spin" /> : <ArrowUpCircle className="size-3" />}
-                      Promote
-                    </button>
-                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div>{reg.email}</div>
                   <div>{reg.mobile}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">{reg.ticketCode}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(reg.createdAt)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {reg.status === 'CHECKED_IN' ? (
                     <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Checked In</span>
@@ -150,6 +168,28 @@ export default function AttendeeList({
                     <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">Waitlisted</span>
                   ) : (
                     <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Cancelled</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {reg.status === 'WAITLISTED' && (
+                    <button 
+                      onClick={() => handlePromote(reg.id)}
+                      disabled={loadingId === reg.id}
+                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold bg-blue-50 px-2 py-1 rounded"
+                    >
+                      {loadingId === reg.id ? <Loader2 className="size-3 animate-spin" /> : <ArrowUpCircle className="size-3" />}
+                      Promote
+                    </button>
+                  )}
+                  {reg.status === 'CHECKED_IN' && (
+                    <button 
+                      onClick={() => handleUndo(reg.id)}
+                      disabled={loadingId === reg.id}
+                      className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 font-semibold bg-red-50 px-2 py-1 rounded"
+                    >
+                      {loadingId === reg.id ? <Loader2 className="size-3 animate-spin" /> : <RotateCcw className="size-3" />}
+                      Undo Check-in
+                    </button>
                   )}
                 </td>
               </tr>
