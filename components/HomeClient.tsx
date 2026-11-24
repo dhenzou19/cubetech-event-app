@@ -62,7 +62,7 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
               
               <div className="p-6 sm:p-7">
                 <div className="mb-3 flex items-center gap-2 text-xs font-medium text-blue-700">
-                  <span className="size-1.5 rounded-full bg-blue-600" /> {event.isPast ? 'PAST EVENT' : event.isFull ? 'FULL' : 'UPCOMING'}
+                  <span className="size-1.5 rounded-full bg-blue-600" /> {event.isPast ? 'PAST EVENT' : event.isFull ? 'FULL / WAITLIST OPEN' : 'UPCOMING'}
                 </div>
                 <h2 className="text-[22px] font-semibold tracking-[-0.045em] text-slate-900">{event.title}</h2>
                 <p className="mt-2 min-h-[48px] max-w-[48ch] text-[14px] leading-[1.7] text-slate-500 line-clamp-2">{event.description}</p>
@@ -74,13 +74,14 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
                   <div className="flex items-start gap-2.5"><Ticket className="mt-0.5 size-[17px] shrink-0 text-slate-400" strokeWidth={1.8} /><div><p className="text-[10px] font-semibold tracking-[0.12em] text-slate-400">ADMISSION</p><p className="mt-1 text-xs font-medium text-slate-700">Free entry</p></div></div>
                 </div>
                 
-                {event.isPast || event.isFull ? (
+                {/* UPDATED BUTTON LOGIC */}
+                {event.isPast ? (
                   <button type="button" disabled className="mt-7 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold cursor-not-allowed bg-slate-100 text-slate-400">
-                    <Check className="size-4" /> {event.isPast ? 'Event Ended' : 'Event Full'}
+                    <Check className="size-4" /> Event Ended
                   </button>
                 ) : (
-                  <button onClick={() => setRegistrationEvent(event)} className="mt-7 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 bg-blue-600 text-white shadow-[0_6px_14px_-7px_rgba(37,99,235,0.9)] hover:bg-blue-700 active:scale-[0.99]">
-                    View Details & Register <ArrowUpRight className="size-4" />
+                  <button onClick={() => setRegistrationEvent(event)} className={`mt-7 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 text-white shadow-[0_6px_14px_-7px_rgba(37,99,235,0.9)] active:scale-[0.99] ${event.isFull ? 'bg-amber-500 hover:bg-amber-600 focus-visible:ring-amber-200' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                    {event.isFull ? 'Join Waitlist' : 'View Details & Register'} <ArrowUpRight className="size-4" />
                   </button>
                 )}
               </div>

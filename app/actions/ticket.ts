@@ -10,11 +10,25 @@ export async function fetchTicketData(ticketCode: string) {
   const event = await db.orm.public.Event.where({ id: registration.eventId }).first();
   if (!event) return { error: 'Event not found' };
 
+  // Generate QR (we won't show it if they are waitlisted, but we generate it anyway)
   const qrCodeDataUrl = await QRCode.toDataURL(registration.ticketCode, {
-    width: 300,
-    margin: 2,
-    color: { dark: '#0f172a', light: '#ffffff' },
+    width: 300, margin: 2, color: { dark: '#0f172a', light: '#ffffff' },
   });
+
+  // Calculate Waitlist Position
+  let waitlistPosition = 0;
+  if (registration.status === 'WAITLISTED') {
+    const allWaitlisted = await db.orm.public.Registration.where({ 
+      eventId: event.id, 
+      status: 'WAITLISTED' 
+    }).all();
+    
+    // Sort by creation date to get the queue order
+    allWaitlisted.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    
+    // Find this person's position (1-based index)
+    waitlistPosition = allWaitlisted.findIndex((r: any) => r.id === registration.id) + 1;
+  }
 
   const startDate = new Date(event.startsAt);
   const endDate = new Date(event.endsAt);
@@ -24,6 +38,7 @@ export async function fetchTicketData(ticketCode: string) {
     ticket: {
       id: registration.id,
       status: registration.status,
+      waitlistPosition,
       fullName: registration.fullName,
       ticketCode: registration.ticketCode,
       eventTitle: event.title,

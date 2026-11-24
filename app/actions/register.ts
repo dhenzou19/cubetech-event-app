@@ -10,7 +10,6 @@ export async function registerAttendee(data: {
   mobile: string;
 }) {
   try {
-    // 1. Verify event exists and check capacity (Prisma 8 workaround)
     const event = await db.orm.public.Event.where({ id: data.eventId }).first();
     if (!event) return { error: 'Event not found' };
 
@@ -19,33 +18,32 @@ export async function registerAttendee(data: {
       status: 'CONFIRMED'
     }).all();
 
-    if (registrations.length >= event.capacity) {
-      return { error: 'Sorry, this event is already full.' };
-    }
+    const isFull = registrations.length >= event.capacity;
 
-    // 2. Check for duplicate email for this event
+    // Check for existing active registration (Confirmed or Waitlisted)
     const existingReg = await db.orm.public.Registration.where({ 
       eventId: event.id,
-      email: data.email,
-      status: 'CONFIRMED'
-    }).first();
+      email: data.email
+    }).all();
 
-    if (existingReg) {
-      return { error: 'This email is already registered for this event.' };
+    const activeReg = existingReg.find((r: any) => r.status === 'CONFIRMED' || r.status === 'WAITLISTED');
+
+    if (activeReg) {
+      return { error: 'This email is already registered or on the waitlist for this event.' };
     }
 
-    // 3. Generate a unique ticket code (e.g., TKT-X8F9A2)
+    // Generate a unique ticket code
     const randomStr = randomBytes(3).toString('hex').toUpperCase();
     const ticketCode = `TKT-${randomStr}`;
 
-    // 4. Save to database
+    // Save to database (status depends on capacity)
     await db.orm.public.Registration.create({
       eventId: event.id,
       fullName: data.fullName,
       email: data.email,
       mobile: data.mobile,
       ticketCode: ticketCode,
-      status: 'CONFIRMED'
+      status: isFull ? 'WAITLISTED' : 'CONFIRMED', // <-- NEW LOGIC
     });
 
     return { success: true, ticketCode };
