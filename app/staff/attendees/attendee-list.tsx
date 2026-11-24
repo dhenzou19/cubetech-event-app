@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { promoteWaitlist } from '@/app/actions/waitlist';
+import { Loader2, ArrowUpCircle } from 'lucide-react';
 
 type EventType = { id: string; title: string; capacity: number };
 type RegistrationType = { 
@@ -24,6 +26,8 @@ export default function AttendeeList({
 }) {
   const [selectedEventId, setSelectedEventId] = useState(events[0]?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   // 1. Filter registrations by selected event
   const eventRegistrations = allRegistrations.filter(r => r.eventId === selectedEventId);
@@ -32,6 +36,7 @@ export default function AttendeeList({
   const selectedEvent = events.find(e => e.id === selectedEventId);
   const totalRegistered = eventRegistrations.filter(r => r.status === 'CONFIRMED' || r.status === 'CHECKED_IN').length;
   const totalCheckedIn = eventRegistrations.filter(r => r.status === 'CHECKED_IN').length;
+  const totalWaitlisted = eventRegistrations.filter(r => r.status === 'WAITLISTED').length;
 
   // 3. Apply Search Filter
   const filteredAttendees = eventRegistrations.filter(r => 
@@ -45,8 +50,29 @@ export default function AttendeeList({
     });
   };
 
+  const handlePromote = async (id: string) => {
+    setLoadingId(id);
+    setError('');
+    
+    const result = await promoteWaitlist(id, selectedEventId);
+    
+    if (result.error) {
+      setError(result.error);
+    } else {
+      // Force a page refresh to get the new data from the server
+      window.location.reload();
+    }
+    setLoadingId(null);
+  };
+
   return (
     <div>
+      {error && (
+        <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium border border-red-100">
+          {error}
+        </div>
+      )}
+
       {/* Top Controls */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-end mb-6">
         <div className="w-full md:w-1/3">
@@ -75,9 +101,10 @@ export default function AttendeeList({
       </div>
 
       {/* Stats Bar */}
-      <div className="bg-blue-50 rounded-lg p-4 mb-6 flex gap-8 text-blue-900 font-medium">
-        <p>Registered: <span className="font-bold text-lg">{totalRegistered}</span> / {selectedEvent?.capacity || 0}</p>
+      <div className="bg-blue-50 rounded-lg p-4 mb-6 flex flex-wrap gap-6 text-blue-900 font-medium">
+        <p>Confirmed: <span className="font-bold text-lg">{totalRegistered}</span> / {selectedEvent?.capacity || 0}</p>
         <p>Checked In: <span className="font-bold text-lg text-green-600">{totalCheckedIn}</span> / {totalRegistered}</p>
+        <p>Waitlisted: <span className="font-bold text-lg text-amber-500">{totalWaitlisted}</span></p>
       </div>
 
       {/* Table */}
@@ -95,7 +122,19 @@ export default function AttendeeList({
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredAttendees.map((reg) => (
               <tr key={reg.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{reg.fullName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {reg.fullName}
+                  {reg.status === 'WAITLISTED' && (
+                    <button 
+                      onClick={() => handlePromote(reg.id)}
+                      disabled={loadingId === reg.id}
+                      className="ml-3 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold bg-blue-50 px-2 py-1 rounded"
+                    >
+                      {loadingId === reg.id ? <Loader2 className="size-3 animate-spin" /> : <ArrowUpCircle className="size-3" />}
+                      Promote
+                    </button>
+                  )}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div>{reg.email}</div>
                   <div>{reg.mobile}</div>
@@ -104,17 +143,13 @@ export default function AttendeeList({
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(reg.createdAt)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {reg.status === 'CHECKED_IN' ? (
-                    <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      Checked In
-                    </span>
+                    <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Checked In</span>
                   ) : reg.status === 'CONFIRMED' ? (
-                    <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                      Confirmed
-                    </span>
+                    <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Confirmed</span>
+                  ) : reg.status === 'WAITLISTED' ? (
+                    <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">Waitlisted</span>
                   ) : (
-                    <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                      {reg.status}
-                    </span>
+                    <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Cancelled</span>
                   )}
                 </td>
               </tr>

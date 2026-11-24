@@ -12,6 +12,7 @@ type EventInfo = {
   title: string
   date: string
   venue: string
+   isFull?: boolean
 }
 
 type EventModalProps = {
