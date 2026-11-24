@@ -22,18 +22,27 @@ async function main() {
   await db.orm.public.Event.where({}).deleteAll();
   await db.orm.public.StaffUser.where({}).deleteAll();
 
-  // 1. Create NEW Staff Account
-  const passwordHash = await bcrypt.hash('09090709977', 10);
-  
+  // 1. Create DEMO Staff Account (For the Reviewer)
+  const demoHash = await bcrypt.hash('password123', 10);
   await db.orm.public.StaffUser.create({
-    name: 'Dhenmarc gwapo',
-    username: 'admin', // <-- New Username
-    passwordHash: passwordHash,
+    name: 'Demo Organizer',
+    username: 'demo',
+    passwordHash: demoHash,
+    role: 'STAFF',
+  });
+  console.log('✅ Demo account created: demo / password123');
+
+  // 2. Create PERSONAL Staff Account (For You)
+  const adminHash = await bcrypt.hash('dd09090709977', 10);
+  await db.orm.public.StaffUser.create({
+    name: 'Dhenmarc Admin',
+    username: 'admin',
+    passwordHash: adminHash,
     role: 'ORGANIZER',
   });
-  console.log('✅ Staff account created: admin / 09090709977');
+  console.log('✅ Personal account created: admin / dd09090709977');
 
-  // ... (Rest of the file with Events and Registrations remains the same)
+  // 3. Create Events
   await db.orm.public.Event.createAll([
     {
       id: 'event-1',
@@ -57,6 +66,7 @@ async function main() {
     }
   ]);
 
+  // 4. Seed Fake Registrations for the Full Event
   await db.orm.public.Registration.createAll([
     { eventId: 'event-2', fullName: 'Juan Dela Cruz', email: 'juan@test.com', mobile: '09171234567', ticketCode: 'FULL-1', status: 'CONFIRMED' },
     { eventId: 'event-2', fullName: 'Maria Clara', email: 'maria@test.com', mobile: '09187654321', ticketCode: 'FULL-2', status: 'CONFIRMED' },

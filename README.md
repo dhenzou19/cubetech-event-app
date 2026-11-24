@@ -70,3 +70,8 @@ Use these credentials to access the staff dashboard (`/staff/login`):
 - [ ] **Staff Dashboard & CSV:** Overview of event stats and attendee list export.
 - [ ] **Event Management:** Staff can create, edit, and close events.
 - [ ] **Undo Check-in:** Staff can reverse a mistaken check-in.
+
+## 🔐 Demo Staff Login
+Use these credentials to access the staff dashboard (`/staff/login`):
+*   **Username:** `demo`
+*   **Password:** `password123`
