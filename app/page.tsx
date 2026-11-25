@@ -1,13 +1,17 @@
 import { db } from '@/app/lib/db';
 import HomeClient from '@/components/HomeClient';
+import { verifyStaffSession } from '@/app/lib/auth';
 
+// ✅ Force no cache for the homepage
 export const dynamic = 'force-dynamic';
+export const revalidate = 0; 
 
 export default async function Page() {
+  const session = await verifyStaffSession();
+
   const dbEvents = await db.orm.public.Event.where({ status: 'PUBLISHED' }).all();
   const registrations = await db.orm.public.Registration.where({ status: 'CONFIRMED' }).all();
 
-  // ✅ FIX: Added ': any' to event and r
   const events = dbEvents.map((event: any) => {
     const startDate = new Date(event.startsAt);
     const endDate = new Date(event.endsAt);
@@ -28,5 +32,5 @@ export default async function Page() {
     };
   });
 
-  return <HomeClient initialEvents={events} />;
+  return <HomeClient initialEvents={events} isStaff={!!session} />;
 }

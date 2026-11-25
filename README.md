@@ -66,11 +66,6 @@ A web application for event registration with QR code ticketing and staff check-
 - [ ] **Event Management:** Staff can create, edit, and close events.
 - [ ] **Undo Check-in:** Staff can reverse a mistaken check-in.
 
-## 🔐 Demo Staff Login
-Use these credentials to access the staff dashboard (`/staff/login`):
-*   **Username:** `demo`
-*   **Password:** `password123`
-
 ## 🚀 Level 2 Progress (Completed)
 - [x] **Cancel a Registration:** Attendees can cancel their confirmed ticket.
 - [x] **Waitlist:** Full events allow attendees to join a waitlist. Staff can promote them.

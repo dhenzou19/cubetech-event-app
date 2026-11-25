@@ -4,9 +4,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Wifi, ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { logoutStaff } from '@/app/actions/auth'
 
 const navigation = [
-    { href: '/staff/events', label: 'Events' }, 
+  { href: '/staff/events', label: 'Events' },
   { href: '/staff/attendees', label: 'View Attendees' },
   { href: '/staff/checkin', label: 'Check-In' },
 ]
@@ -17,7 +18,6 @@ export default function StaffLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900">
-      {/* 1. MATCHED THE HEADER EXACTLY TO HomeClient */}
       <header className="relative z-20 border-b border-slate-200/70 bg-white/75 backdrop-blur-xl">
         <nav aria-label="Staff navigation" className="mx-auto flex h-[76px] max-w-6xl items-center justify-between px-5 sm:px-8">
           
@@ -48,9 +48,14 @@ export default function StaffLayout({ children }: { children: ReactNode }) {
                     </Link>
                   )
                 })}
-                <Link href="/staff/login" className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
-                  Sign Out
-                </Link>
+                
+                {/* ✅ REAL SIGN OUT BUTTON */}
+                <form action={logoutStaff}>
+                  <button type="submit" className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
+                    Sign Out
+                  </button>
+                </form>
+
               </>
             )}
           </div>

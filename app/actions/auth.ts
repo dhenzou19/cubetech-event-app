@@ -4,6 +4,7 @@ import { db } from '@/app/lib/db';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation'; // <-- Added redirect to the top imports
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'super-secret-fallback-key-change-this');
 
@@ -51,4 +52,11 @@ export async function loginStaff(formData: FormData) {
   });
 
   return { success: true };
+}
+
+// ✅ The logout function, using the top-level imports
+export async function logoutStaff() {
+  const cookieStore = await cookies();
+  cookieStore.delete('staff_session');
+  redirect('/');
 }
