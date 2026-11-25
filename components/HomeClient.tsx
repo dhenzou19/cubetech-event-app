@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ArrowUpRight, CalendarDays, Check, MapPin, Ticket, Users, Wifi } from 'lucide-react';
 import { EventModal } from '@/components/event-modals';
 
-export default function HomeClient({ initialEvents }: { initialEvents: any[] }) {
+export default function HomeClient({ initialEvents, isStaff }: { initialEvents: any[], isStaff: boolean }) {
   const [registrationEvent, setRegistrationEvent] = useState<any>(null);
   const [ticketLookupOpen, setTicketLookupOpen] = useState(false);
 
@@ -18,7 +18,16 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
           </a>
           <div className="flex items-center gap-3 sm:gap-7">
             <button onClick={() => setTicketLookupOpen(true)} className="hidden text-[13px] font-medium text-slate-600 transition hover:text-blue-600 sm:inline">Find My Ticket</button>
-            <a href="/staff/login" className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">Staff Login</a>
+            
+            {isStaff ? (
+              <a href="/staff/events" className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100">
+                Staff Dashboard
+              </a>
+            ) : (
+              <a href="/staff/login" className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
+                Staff Login
+              </a>
+            )}
           </div>
         </nav>
       </header>
@@ -74,7 +83,6 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
                   <div className="flex items-start gap-2.5"><Ticket className="mt-0.5 size-[17px] shrink-0 text-slate-400" strokeWidth={1.8} /><div><p className="text-[10px] font-semibold tracking-[0.12em] text-slate-400">ADMISSION</p><p className="mt-1 text-xs font-medium text-slate-700">Free entry</p></div></div>
                 </div>
                 
-                {/* UPDATED BUTTON LOGIC */}
                 {event.isPast ? (
                   <button type="button" disabled className="mt-7 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold cursor-not-allowed bg-slate-100 text-slate-400">
                     <Check className="size-4" /> Event Ended
@@ -101,7 +109,8 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
             id: registrationEvent.id,
             title: registrationEvent.title, 
             date: registrationEvent.dateStr, 
-            venue: registrationEvent.venue 
+            venue: registrationEvent.venue,
+            isFull: registrationEvent.isFull
           }} 
           onClose={() => setRegistrationEvent(null)} 
         />
