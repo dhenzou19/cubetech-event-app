@@ -15,7 +15,7 @@ A web application for event registration with QR code ticketing and staff check-
 
 ## 🔐 Demo Staff Login
 Use these credentials to access the staff dashboard (`/staff/login`):
-*   **Username:** `staff1`
+*   **Username:** `demo`
 *   **Password:** `password123`
 
 ## 🚀 Setup and Run Instructions
