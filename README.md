@@ -43,7 +43,7 @@ A web application for event registration with QR code ticketing and staff check-
 Use these credentials to access the staff dashboard (`/staff/login`):
 *   **Organizer (Full Access):** 
     *   Username: `admin`
-    *   Password: `09090709977`
+    *   Password: `dd09090709977`
 *   **Door Staff (Check-in only):** 
     *   Username: `demo`
     *   Password: `password123`
