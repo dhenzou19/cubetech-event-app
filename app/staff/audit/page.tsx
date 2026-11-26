@@ -11,7 +11,6 @@ export default async function AuditPage() {
   if (!session) redirect('/staff/login');
 
   const logs = await db.orm.public.AuditLog.where({}).all();
-  // Sort newest first
   logs.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const formatDate = (dateStr: string) => {

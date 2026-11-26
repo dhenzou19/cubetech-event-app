@@ -5,32 +5,14 @@ import { usePathname } from 'next/navigation'
 import { Wifi, ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { logoutStaff } from '@/app/actions/auth'
-import { useEffect, useState } from 'react'
 
 export default function StaffLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const isLoginPage = pathname === '/staff/login'
-  
-  // We need to read the cookie to see the role. In a real app, you'd pass this from the server layout.
-  // For simplicity, we'll use a quick client-side check.
-  const [role, setRole] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Read the cookie manually on the client to hide the tab
-    const cookies = document.cookie.split(';')
-    const sessionCookie = cookies.find(c => c.trim().startsWith('staff_session='))
-    if (sessionCookie) {
-      try {
-        const token = sessionCookie.split('=')[1]
-        const payload = JSON.parse(atob(token.split('.')[1]))
-        setRole(payload.role)
-      } catch (e) {}
-    }
-  }, [])
-
+  // ✅ We will just show the tabs. If a staff tries to click Events, the server will block them.
   const navigation = [
-    // Only show Events if the user is an ORGANIZER
-    ...(role === 'ORGANIZER' ? [{ href: '/staff/events', label: 'Events' }] : []),
+    { href: '/staff/events', label: 'Events' },
     { href: '/staff/attendees', label: 'View Attendees' },
     { href: '/staff/checkin', label: 'Check-In' },
     { href: '/staff/audit', label: 'Audit Log' },
