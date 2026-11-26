@@ -13,6 +13,11 @@ A web application for event registration with QR code ticketing and staff check-
 *   **Authentication:** `jose` (JWT stored in HTTP-Only cookies)
 *   **QR Code Generation:** `qrcode`
 
+## 🔐 Demo Staff Login
+Use these credentials to access the staff dashboard (`/staff/login`):
+*   **Username:** `demo`
+*   **Password:** `password123`
+
 ## 🚀 Setup and Run Instructions
 
 1. **Clone the repository:**
