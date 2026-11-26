@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
 import { useMemo, useState, type ReactNode } from 'react'
-import { Download, Search, Users, UserCheck, UserRoundPlus, Undo2, ArrowUpRight } from 'lucide-react'
+import { Download, Search, Users, UserCheck, UserRoundPlus, Undo2, ArrowUpRight, X, Loader2 } from 'lucide-react'
 import { promoteWaitlist } from '@/app/actions/waitlist'
 import { undoCheckIn } from '@/app/actions/checkin'
 
@@ -24,6 +24,9 @@ export default function StaffAttendees({ events, allRegistrations }: { events: E
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [error, setError] = useState('')
 
+  // ✅ New state for the custom confirmation modal
+  const [undoTarget, setUndoTarget] = useState<RegistrationType | null>(null)
+
   const eventRegistrations = useMemo(() => allRegistrations.filter(r => r.eventId === selectedEventId), [allRegistrations, selectedEventId]);
   const selectedEvent = events.find(e => e.id === selectedEventId);
   
@@ -38,12 +41,12 @@ export default function StaffAttendees({ events, allRegistrations }: { events: E
   }, [eventRegistrations, query])
 
   async function handleUndo(id: string) {
-    if (!confirm("Are you sure you want to undo this check-in?")) return;
     setLoadingId(id); setError('');
     const res = await undoCheckIn(id);
     if (res.error) setError(res.error);
     else window.location.reload();
     setLoadingId(null);
+    setUndoTarget(null);
   }
 
   async function handlePromote(id: string) {
@@ -68,6 +71,7 @@ export default function StaffAttendees({ events, allRegistrations }: { events: E
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-7 sm:pt-14 lg:px-10">
+      {/* ... (Keep the header and stats cards exactly as they were) ... */}
       <div className="mb-8 flex flex-col gap-4 sm:mb-9 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700 shadow-sm"><span className="size-1.5 rounded-full bg-blue-600" /> Guest list</div>
@@ -134,7 +138,7 @@ export default function StaffAttendees({ events, allRegistrations }: { events: E
                   </td>
                   <td className="pr-5 text-right">
                     {a.status === 'CHECKED_IN' && (
-                      <button onClick={() => handleUndo(a.id)} disabled={loadingId === a.id} className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50">
+                      <button onClick={() => setUndoTarget(a)} disabled={loadingId === a.id} className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50">
                         <Undo2 className="size-3.5" /> Undo
                       </button>
                     )}
@@ -154,6 +158,29 @@ export default function StaffAttendees({ events, allRegistrations }: { events: E
           </table>
         </div>
       </div>
+
+      {/* ✅ Custom Undo Confirmation Modal */}
+      {undoTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden relative p-6 text-center">
+            <div className="mx-auto w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-4 ring-1 ring-amber-100">
+              <Undo2 className="size-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Undo Check-in?</h3>
+            <p className="text-sm text-slate-500 mt-2 mb-6">
+              Are you sure you want to revert <strong>{undoTarget.fullName}</strong> back to Confirmed? They will need to be scanned again.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setUndoTarget(null)} className="flex-1 py-2.5 rounded-xl bg-slate-100 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition">
+                Cancel
+              </button>
+              <button onClick={() => handleUndo(undoTarget.id)} disabled={loadingId === undoTarget.id} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition flex justify-center items-center">
+                {loadingId === undoTarget.id ? <Loader2 className="size-4 animate-spin" /> : 'Yes, Undo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
