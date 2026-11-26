@@ -3,10 +3,33 @@
 import { db } from '@/app/lib/db';
 import { verifyStaffSession } from '@/app/lib/auth';
 
+// ✅ Simple in-memory rate limiter (resets on server restart)
+const rateLimitMap = new Map<string, { count: number, lastReset: number }>();
+const MAX_ATTEMPTS = 5;
+const TIME_WINDOW = 60 * 1000; // 1 minute
+
 export async function processCheckIn(eventId: string, ticketCode: string) {
   const session = await verifyStaffSession();
   if (!session) return { status: 'invalid' as const };
 
+  // ✅ Rate Limiting Check
+  const staffId = session.staffId as string;
+  const now = Date.now();
+  const record = rateLimitMap.get(staffId) || { count: 0, lastReset: now };
+
+  if (now - record.lastReset > TIME_WINDOW) {
+    record.count = 0;
+    record.lastReset = now;
+  }
+
+  if (record.count >= MAX_ATTEMPTS) {
+    return { status: 'invalid' as const, message: 'Too many attempts. Please wait a minute.' };
+  }
+
+  record.count += 1;
+  rateLimitMap.set(staffId, record);
+
+  // Find registration
   const registration = await db.orm.public.Registration.where({ 
     ticketCode: ticketCode,
     eventId: eventId
@@ -15,6 +38,10 @@ export async function processCheckIn(eventId: string, ticketCode: string) {
   if (!registration) {
     return { status: 'invalid' as const, message: 'Ticket not found for this event.' };
   }
+
+  // Reset rate limit on successful scan
+  record.count = 0;
+  rateLimitMap.set(staffId, record);
 
   if (registration.status === 'CANCELLED') {
     return { status: 'invalid' as const, message: 'This ticket has been cancelled.' };
@@ -36,7 +63,6 @@ export async function processCheckIn(eventId: string, ticketCode: string) {
     checkedInAt: new Date()
   });
 
-  // ✅ Correctly placed Audit Log
   await db.orm.public.AuditLog.create({
     action: 'CHECK_IN',
     details: `Checked in ${registration.fullName} (${registration.ticketCode})`,
@@ -50,7 +76,6 @@ export async function undoCheckIn(registrationId: string) {
   const session = await verifyStaffSession();
   if (!session) return { error: 'Unauthorized' };
 
-  // Fetch registration to get the name for the log
   const registration = await db.orm.public.Registration.where({ id: registrationId }).first();
 
   await db.orm.public.Registration.where({ id: registrationId }).update({
@@ -58,7 +83,6 @@ export async function undoCheckIn(registrationId: string) {
     checkedInAt: null
   });
 
-  // ✅ Correctly placed Audit Log for Undo
   await db.orm.public.AuditLog.create({
     action: 'UNDO_CHECK_IN',
     details: `Undid check-in for ${registration?.fullName} (${registration?.ticketCode})`,

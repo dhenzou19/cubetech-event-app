@@ -20,7 +20,6 @@ export async function registerAttendee(data: {
 
     const isFull = registrations.length >= event.capacity;
 
-    // Check for existing active registration (Confirmed or Waitlisted)
     const existingReg = await db.orm.public.Registration.where({ 
       eventId: event.id,
       email: data.email
@@ -32,18 +31,17 @@ export async function registerAttendee(data: {
       return { error: 'This email is already registered or on the waitlist for this event.' };
     }
 
-    // Generate a unique ticket code
-    const randomStr = randomBytes(3).toString('hex').toUpperCase();
+    // ✅ SECURE TICKET GENERATION (32 characters long)
+    const randomStr = randomBytes(16).toString('hex').toUpperCase();
     const ticketCode = `TKT-${randomStr}`;
 
-    // Save to database (status depends on capacity)
     await db.orm.public.Registration.create({
       eventId: event.id,
       fullName: data.fullName,
       email: data.email,
       mobile: data.mobile,
       ticketCode: ticketCode,
-      status: isFull ? 'WAITLISTED' : 'CONFIRMED', // <-- NEW LOGIC
+      status: isFull ? 'WAITLISTED' : 'CONFIRMED',
     });
 
     return { success: true, ticketCode };

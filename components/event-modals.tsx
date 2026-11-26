@@ -208,7 +208,7 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
                 <input name="email" type="email" autoComplete="email" required placeholder="you@example.com" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
               </label>
               <label className="flex flex-col gap-2 text-xs font-semibold text-slate-700">Mobile Number
-                <input name="mobile" type="tel" autoComplete="tel" required placeholder="09171234567" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
+                <input name="mobile" type="tel" autoComplete="tel" required placeholder="Your Number" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
               </label>
               <button type="submit" disabled={loading} className={`mt-2 flex h-[54px] w-full items-center justify-center rounded-xl text-sm font-semibold text-white shadow-[0_7px_16px_-8px_rgba(37,99,235,0.9)] transition disabled:opacity-50 ${event?.isFull ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'}`}>
                 {loading ? <Loader2 className="size-5 animate-spin" /> : event?.isFull ? 'Join Waitlist' : 'Register Now'}
@@ -229,10 +229,10 @@ export function EventModal({ mode, event, onClose }: EventModalProps) {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <label className="flex flex-col gap-2 text-xs font-semibold text-slate-700">Ticket Code
-                <input name="ticketCode" autoComplete="off" required placeholder="e.g. TKT-A1B2C3" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal uppercase text-slate-900 outline-none transition placeholder:normal-case placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
+                <input name="ticketCode" autoComplete="off" required placeholder="TKT" className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-normal uppercase text-slate-900 outline-none transition placeholder:normal-case placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
               </label>
               <label className="flex flex-col gap-2 text-xs font-semibold text-slate-700">Email Address
-                <span className="relative block"><Mail className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input name="email" type="email" autoComplete="email" required placeholder="you@example.com" className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" /></span>
+                <span className="relative block"><Mail className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input name="email" type="email" autoComplete="email" required placeholder="" className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100" /></span>
               </label>
               <button type="submit" disabled={loading} className="mt-2 flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-[0_7px_16px_-8px_rgba(37,99,235,0.9)] transition hover:bg-blue-700 disabled:opacity-50">
                 {loading ? <Loader2 className="size-5 animate-spin" /> : <><Search className="size-4" />Find Ticket</>}
