@@ -1,7 +1,6 @@
 'use server';
 
 import { db } from '@/app/lib/db';
-import { verifyStaffSession } from '@/app/lib/auth';
 
 export async function cancelRegistration(registrationId: string) {
   const registration = await db.orm.public.Registration.where({ id: registrationId }).first();
@@ -13,6 +12,13 @@ export async function cancelRegistration(registrationId: string) {
 
   await db.orm.public.Registration.where({ id: registrationId }).update({
     status: 'CANCELLED'
+  });
+
+  // ✅ Audit Log
+  await db.orm.public.AuditLog.create({
+    action: 'CANCEL_REGISTRATION',
+    details: `Cancelled ticket ${registration.ticketCode} (${registration.fullName})`,
+    staffName: 'Attendee (Self-Service)',
   });
 
   return { success: true };

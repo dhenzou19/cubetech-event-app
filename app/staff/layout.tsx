@@ -5,16 +5,36 @@ import { usePathname } from 'next/navigation'
 import { Wifi, ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { logoutStaff } from '@/app/actions/auth'
-
-const navigation = [
-  { href: '/staff/events', label: 'Events' },
-  { href: '/staff/attendees', label: 'View Attendees' },
-  { href: '/staff/checkin', label: 'Check-In' },
-]
+import { useEffect, useState } from 'react'
 
 export default function StaffLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const isLoginPage = pathname === '/staff/login'
+  
+  // We need to read the cookie to see the role. In a real app, you'd pass this from the server layout.
+  // For simplicity, we'll use a quick client-side check.
+  const [role, setRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Read the cookie manually on the client to hide the tab
+    const cookies = document.cookie.split(';')
+    const sessionCookie = cookies.find(c => c.trim().startsWith('staff_session='))
+    if (sessionCookie) {
+      try {
+        const token = sessionCookie.split('=')[1]
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        setRole(payload.role)
+      } catch (e) {}
+    }
+  }, [])
+
+  const navigation = [
+    // Only show Events if the user is an ORGANIZER
+    ...(role === 'ORGANIZER' ? [{ href: '/staff/events', label: 'Events' }] : []),
+    { href: '/staff/attendees', label: 'View Attendees' },
+    { href: '/staff/checkin', label: 'Check-In' },
+    { href: '/staff/audit', label: 'Audit Log' },
+  ]
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900">
@@ -41,7 +61,6 @@ export default function StaffLayout({ children }: { children: ReactNode }) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      aria-current={active ? 'page' : undefined}
                       className={`rounded-lg text-[13px] font-medium transition ${active ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}
                     >
                       {item.label}
@@ -49,17 +68,14 @@ export default function StaffLayout({ children }: { children: ReactNode }) {
                   )
                 })}
                 
-                {/* ✅ REAL SIGN OUT BUTTON */}
                 <form action={logoutStaff}>
                   <button type="submit" className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
                     Sign Out
                   </button>
                 </form>
-
               </>
             )}
           </div>
-
         </nav>
       </header>
       <main className="relative min-h-[calc(100vh-76px)] overflow-hidden">{children}</main>

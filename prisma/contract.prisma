@@ -41,3 +41,11 @@ model Registration {
   eventId      String
   event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
+
+model AuditLog {
+  id        String   @id @onCreate(uuid())
+  action    String
+  details   String
+  staffName String
+  createdAt DateTime @onCreate(now())
+}
